@@ -9,6 +9,7 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { v4 as uuidv4 } from 'uuid';
 import slugify from 'slugify';
 import { IsubCategoryService } from './interfaces/subcategory.interface';
+import { CustomRequest } from 'src/common/interfaces/custom-request.interface';
 
 
 @Injectable()
@@ -23,9 +24,9 @@ export class SubcategoryService implements IsubCategoryService {
         return await this.subcategoryModel.find({})
     }
 
-    async createSubCategory(categoryId: string, createSubCategoryDto: CreateSubCategoryDto, file: Express.Multer.File): Promise<Subcategory> {
+    async createSubCategory(req: CustomRequest, categoryId: string, createSubCategoryDto: CreateSubCategoryDto, file: Express.Multer.File): Promise<Subcategory> {
         const newName = createSubCategoryDto.name.toLocaleLowerCase()
-        
+
         const existCategory = await this.categoryModel.findById(categoryId)
         if (!existCategory) {
             throw new NotFoundException('In-Valid Id Category')
@@ -44,17 +45,17 @@ export class SubcategoryService implements IsubCategoryService {
             image: { secure_url, public_id },
             categoryId,
             customId,
-            // createdBy: req.user._id
+            createdBy: req.user._id
         })
 
         return newSubCategory
     }
 
-    async updateSubCategory(categoryId: string, subcategoryId: string, updateSubCategoryDto: UpdateSubCategoryDto, file: Express.Multer.File): Promise<Subcategory> {
+    async updateSubCategory(req: CustomRequest, categoryId: string, subcategoryId: string, updateSubCategoryDto: UpdateSubCategoryDto, file: Express.Multer.File): Promise<Subcategory> {
 
         const existSubCategory = await this.subcategoryModel.findOne({ _id: subcategoryId, categoryId })
         if (!existSubCategory) {
-            throw new NotFoundException('In-Valid Id Subcategory')
+            throw new NotFoundException('In-Valid SubcategoryId OR CategoryId')
         }
 
         if (updateSubCategoryDto.name) {
@@ -78,7 +79,7 @@ export class SubcategoryService implements IsubCategoryService {
         }
 
 
-        // existSubCategory.updatedBy = req.user._id
+        existSubCategory.updatedBy = req.user._id
         existSubCategory.save()
 
         return existSubCategory

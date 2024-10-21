@@ -6,9 +6,10 @@ import { Model } from 'mongoose';
 import { CreateBrandDto } from './dtos/create-brand.dto';
 import { UpdateBrandDto } from './dtos/update-brand.dto';
 import { IBrandService } from './interfaces/brand.interface';
+import { CustomRequest } from 'src/common/interfaces/custom-request.interface';
 
 @Injectable()
-export class BrandService implements IBrandService{
+export class BrandService implements IBrandService {
     constructor(
         @InjectModel(Brand.name) private brandModel: Model<Brand>,
         private cloudinaryService: CloudinaryService
@@ -19,7 +20,7 @@ export class BrandService implements IBrandService{
         return brands
     }
 
-    async createBrand(createBrandDto: CreateBrandDto, file: Express.Multer.File): Promise<Brand> {
+    async createBrand(req: CustomRequest, createBrandDto: CreateBrandDto, file: Express.Multer.File): Promise<Brand> {
         const name = createBrandDto.name.toLowerCase();
 
         // Check if a brand with the same name already exists
@@ -33,12 +34,12 @@ export class BrandService implements IBrandService{
         const newBrand = await this.brandModel.create({
             name,
             logo: { secure_url, public_id },
-            // createdBy,
+            createdBy: req.user._id
         })
         return newBrand
     }
 
-    async updateBrand(brandId: string, updateBrandDto: UpdateBrandDto, file?: Express.Multer.File): Promise<Brand> {
+    async updateBrand(req: CustomRequest, brandId: string, updateBrandDto: UpdateBrandDto, file?: Express.Multer.File): Promise<Brand> {
         const brand = await this.brandModel.findById(brandId)
         if (!brand) {
             throw new NotFoundException(`Brand with ID ${brandId} not found`)
@@ -59,7 +60,7 @@ export class BrandService implements IBrandService{
             await this.cloudinaryService.destroy(brand.logo.public_id)
             brand.logo = { secure_url, public_id }
         }
-        // brand.updatedBy 
+        brand.updatedBy = req.user._id
         brand.save()
         return brand
     }

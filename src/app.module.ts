@@ -15,6 +15,9 @@ import * as Joi from 'joi';
 import { JwtModule } from '@nestjs/jwt';
 import { TokenService } from './auth/service/generate&VerifyToken.service';
 import { MailModule } from './mail/mail.module';
+import { CartModule } from './cart/cart.module';
+import { OrderModule } from './order/order.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -35,7 +38,10 @@ import { MailModule } from './mail/mail.module';
     ProductModule,
     AuthModule,
     UserModule,
-    MailModule
+    MailModule,
+    CartModule,
+    OrderModule,
+    ReviewsModule
   ],
   controllers: [AppController],
   providers: [AppService, TokenService],

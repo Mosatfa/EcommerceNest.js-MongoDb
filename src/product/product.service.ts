@@ -9,6 +9,7 @@ import { Brand } from 'src/brand/schema/brand.schema';
 import { Subcategory } from 'src/subcategory/schema/subcategory.schema';
 import slugify from 'slugify';
 import { v4 as uuidv4 } from 'uuid';
+import { CustomRequest } from 'src/common/interfaces/custom-request.interface';
 
 
 @Injectable()
@@ -21,7 +22,7 @@ export class ProductService {
     ) { }
 
 
-    async createProduct(createProductDto: CreateProductDto, files: any): Promise<Product> {
+    async createProduct(req: CustomRequest, createProductDto: CreateProductDto, files: any): Promise<Product> {
         const { name, price, discount, categoryId, subcategoryId, brandId } = createProductDto
 
         //check category and brand
@@ -57,17 +58,15 @@ export class ProductService {
             finalPrice,
             mainImage: { secure_url, public_id },
             subImages,
-        }
-
-
-        // req.body.createdBy = req.user._id
+            createdBy: req.user._id
+        } 
         const product = await this.productModel.create(productData);
 
         return product
     }
 
 
-    async updateProduct(productId: string, UpdateProductDto?: UpdateProductDto, files?: any): Promise<Product> {
+    async updateProduct(req: CustomRequest, productId: string, UpdateProductDto?: UpdateProductDto, files?: any): Promise<Product> {
         const { name, price, discount, colors, size } = UpdateProductDto;
 
         const product = await this.productModel.findById(productId)
@@ -103,10 +102,10 @@ export class ProductService {
 
 
         // upload mainImage
-        if (files.mainImage?.length) {;
+        if (files.mainImage?.length) {
             const { secure_url, public_id } = await this.cloudinaryService.uploadFile(files.mainImage[0], `product/${product.customId}`)
             await this.cloudinaryService.destroy(product.mainImage.public_id)
-            productData.mainImage = { secure_url, public_id }        
+            productData.mainImage = { secure_url, public_id }
         }
 
         //Upload subImages if present
@@ -116,15 +115,13 @@ export class ProductService {
                 const { secure_url, public_id } = await this.cloudinaryService.uploadFile(file, `product/${product.customId}/subImages`);
                 for (let i = 0; i < product.subImages.length; i++) {
                     await this.cloudinaryService.destroy(product.subImages[i].public_id)
-                    console.log(product.subImages[i].public_id)
                 }
                 subImagies.push({ secure_url, public_id })
             }
             productData.subImages = subImagies
         }
-        console.log(productData);
-
-        // productData.updatedBy = req.user._id
+     
+        productData.updatedBy = req.user._id
 
         const newProduct = await this.productModel.findByIdAndUpdate({ _id: product._id }, productData)
 

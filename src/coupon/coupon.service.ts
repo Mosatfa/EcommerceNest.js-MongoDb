@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateCouponDto } from './dtos/create-coupon.dto';
 import { UpdateCouponDto } from './dtos/update-coupon.dto';
+import { CustomRequest } from 'src/common/interfaces/custom-request.interface';
 
 @Injectable()
 export class CouponService implements ICouponService {
@@ -19,22 +20,24 @@ export class CouponService implements ICouponService {
         return coupon
     };
 
-    async createCoupon(createCouponDto: CreateCouponDto): Promise<Coupon> {
+    async createCoupon(req: CustomRequest,createCouponDto: CreateCouponDto): Promise<Coupon> {
         const normalizedName = createCouponDto.name.toUpperCase();
         // Check if coupon with the normalized name already exists
         if (await this.couponModel.findOne({ name: normalizedName })) {
             throw new ConflictException(`Duplicate Coupon name: ${normalizedName}`);
         }
 
-        // // Convert expireDate from string to Date
+        // Convert expireDate from string to Date
         createCouponDto.expireDate = new Date(createCouponDto.expireDate);
-        // createCouponDto.createdBy = req.user._id;
-
-        const coupon = await this.couponModel.create(createCouponDto);
+        
+        const coupon = await this.couponModel.create({
+            ...createCouponDto,
+            createdBy: req.user._id
+        });
         return coupon
     };
 
-    async updateCoupon(couponId: string, updateCouponDto: UpdateCouponDto): Promise<Coupon> {
+    async updateCoupon(req: CustomRequest,couponId: string, updateCouponDto: UpdateCouponDto): Promise<Coupon> {
         const coupon = await this.couponModel.findById(couponId)
         if (!coupon) {
             throw new NotFoundException(`Coupon with ID ${couponId} not found.`)
@@ -57,7 +60,7 @@ export class CouponService implements ICouponService {
             coupon.expireDate = new Date(updateCouponDto.expireDate)
         }
 
-        // coupon.updatedBy = req.user._id
+        coupon.updatedBy = req.user._id
         coupon.save()
         return coupon
     };

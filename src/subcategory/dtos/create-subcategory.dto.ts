@@ -6,8 +6,4 @@ export class CreateSubCategoryDto {
     @IsNotEmpty()
     @Length(2, 200)
     name: string;
-
-    @IsObject()
-    @IsNotEmpty()
-    file: Record<string, any>;
 }

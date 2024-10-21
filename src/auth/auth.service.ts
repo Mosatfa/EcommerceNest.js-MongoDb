@@ -12,6 +12,8 @@ import { RefreshToken } from 'src/auth/schema/refresh-token.schema';
 import { RefreshTokenService } from './service/refresh-token.service';
 import { v4 as uuidv4 } from 'uuid';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { TokenResponse } from './interface/token-response.interface';
+import { SignupResponse } from './interface/signup-response.interface';
 
 @Injectable()
 export class AuthService {
@@ -26,9 +28,8 @@ export class AuthService {
     ) { }
 
 
-    async signUp(req: Request, signupData: any) {
+    async signUp(req: Request, signupData: any): Promise<SignupResponse> {
         const { userName, email, password } = signupData;
-        console.log(userName, email, password);
 
         if (await this.userModel.findOne({ email: email.toLowerCase() })) {
             throw new ConflictException('Email already Exist')
@@ -49,7 +50,7 @@ export class AuthService {
 
         const link = `${req.protocol}://${req.headers.host}/auth/confirmEmail/${token}`
         const rfLink = `${req.protocol}://${req.headers.host}/auth/newConfirmEmail/${refreshToken}`
-        console.log(link);
+ 
 
         const html = `<!DOCTYPE html>
         <html lang="en">
@@ -93,16 +94,16 @@ export class AuthService {
         if (!await this.mailService.sendMail({ to: email, subject: 'Confirm Email', html })) {
             throw new BadRequestException(`Email Rejected`)
         }
-        console.log(password);
 
         const hashPassword = this.bcryptService.hash(password)
 
         const { _id } = await this.userModel.create({ userName, email, password: hashPassword })
-        return { id_: _id }
+        return { _id: _id }
     }
 
-    async login(loginData: LoginDto) {
+    async login(loginData: LoginDto): Promise<TokenResponse> {
         const { email, password } = loginData;
+
         const user = await this.userModel.findOne({ email: email.toLowerCase() })
         if (!user) {
             throw new BadRequestException(`Not Register Account`)
@@ -118,17 +119,16 @@ export class AuthService {
 
         const access_token = this.tokenService.generateToken({ payload: { id: user._id, role: user.role }, expiresIn: 60 * 30 })
         const refresh_token = uuidv4()
-        await this.refreshTokenService.storeRefreshToken(refresh_token, user._id)
 
-        user.status = "Online"
-        user.save()
+        await this.refreshTokenService.storeRefreshToken(refresh_token, user._id);
+
+        user.status = "online"
+        await user.save()
 
         return { access_token, refresh_token }
     }
 
-    async refreshTokens(refreshTokenDto: RefreshTokenDto) {
-        console.log(refreshTokenDto);
-
+    async refreshTokens(refreshTokenDto: RefreshTokenDto): Promise<TokenResponse> {
         const token = await this.refreshTokenModel.findOne({
             token: refreshTokenDto.refreshtoken,
             expireDate: { $gte: new Date() }
@@ -136,7 +136,7 @@ export class AuthService {
         if (!token) {
             throw new ConflictException('Refresh token is invalid or has expired')
         }
-
+        
         const user = await this.userModel.findById(token.userId)
         if (!user) {
             throw new ConflictException('User associated with this token does not exist')

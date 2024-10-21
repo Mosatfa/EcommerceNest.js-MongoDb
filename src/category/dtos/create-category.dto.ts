@@ -5,8 +5,4 @@ export class CreateCategoryDto {
     @IsNotEmpty()
     @Length(2, 200)
     name: string;
-
-    @IsObject()
-    @IsNotEmpty() 
-    file: Record<string, any>;
 }

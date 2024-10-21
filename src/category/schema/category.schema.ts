@@ -14,8 +14,8 @@ export class Category {
     @Prop({ required: true, type: Object }) //cloudenary
     image: Record<string, any>;;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false })
-    createdBy: mongoose.Schema.Types.ObjectId; // required: true type USER
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
+    createdBy: mongoose.Schema.Types.ObjectId;
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
     updatedBy: mongoose.Schema.Types.ObjectId;

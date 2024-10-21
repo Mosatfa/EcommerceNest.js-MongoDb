@@ -19,11 +19,11 @@ export class Coupon {
     @Prop({ type: [{ type: mongoose.Types.ObjectId, ref: 'User' }] })
     usedBy: mongoose.Types.ObjectId[];
 
-    @Prop({ type: mongoose.Types.ObjectId, ref: 'User', required: false }) // ture
-    createdBy: mongoose.Types.ObjectId;
+    @Prop({ type: mongoose.Types.ObjectId, ref: 'User', required: true })
+    createdBy: mongoose.Schema.Types.ObjectId;
 
-    @Prop({ type: mongoose.Types.ObjectId, ref: 'User' })
-    updatedBy: mongoose.Types.ObjectId;
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+    updatedBy: mongoose.Schema.Types.ObjectId;
 
 }
 

@@ -9,10 +9,8 @@ import { Roles } from './common/decorator/roles.decorator';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Roles(Role.User)
-  @UseGuards(AuthGuard,RolesGuard)
-  @Get()
+
   getHello(): string {
-    return 
+    return this.appService.getHello()
   }
 }
