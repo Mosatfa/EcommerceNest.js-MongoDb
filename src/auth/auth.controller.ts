@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseFilters } from '@nestjs/common';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -10,13 +11,19 @@ export class AuthController {
 
     @Post('singup')
     @HttpCode(HttpStatus.CREATED)
-    async signUp(@Req() req: Request, @Body() signupData: SignUpDto) {
-        return await this.authService.signUp(req , signupData)
+    async signUp(@Req() req: Request, @Body() signupDataDto: SignUpDto) {
+        return await this.authService.signUp(req , signupDataDto)
     }
 
     @Post('login')
-    @HttpCode(HttpStatus.OK)  // Sets the HTTP status to 200 for successful login
-    async login(@Req() req: Request, @Body() loginData: LoginDto) {
-        return await this.authService.login(req, loginData);
+    @HttpCode(HttpStatus.OK)
+    async login(@Req() req: Request, @Body() loginDataDto: LoginDto) {
+        return await this.authService.login(loginDataDto);
+    }
+
+    @Post('refresh')
+    @HttpCode(HttpStatus.OK)  
+    async refreshTokens(@Body() refreshTokenDto:RefreshTokenDto) {
+        return await this.authService.refreshTokens(refreshTokenDto)
     }
 }

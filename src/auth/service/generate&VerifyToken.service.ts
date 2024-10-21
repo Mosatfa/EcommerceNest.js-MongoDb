@@ -22,10 +22,9 @@ export class TokenService {
         return token;
     }
 
-
     verifyToken({
         token,
-        signature = process.env.TOKEN_SIGNATURE,
+        signature = this.configService.get<string>('JWT_SECRET'),
     }: {
         token: string;
         signature?: string;
@@ -35,5 +34,4 @@ export class TokenService {
         } as JwtVerifyOptions);
         return decoded;
     }
-
 }

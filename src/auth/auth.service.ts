@@ -3,22 +3,27 @@ import { BadRequestException, ConflictException, Injectable } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from 'src/user/schema/user.schema';
-import { TokenService } from './jwt/Generate&VerifyToken.service';
+import { TokenService } from './service/generate&VerifyToken.service';
 import { Request } from 'express';
 import { BcryptService } from './bcrypt/bcrypt.service';
 import { MailService } from 'src/mail/mail.service';
 import { LoginDto } from './dto/login.dto';
+import { RefreshToken } from 'src/auth/schema/refresh-token.schema';
+import { RefreshTokenService } from './service/refresh-token.service';
+import { v4 as uuidv4 } from 'uuid';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+
 @Injectable()
 export class AuthService {
     constructor(
         @InjectModel(User.name) private userModel: Model<User>,
+        @InjectModel(RefreshToken.name) private refreshTokenModel: Model<RefreshToken>,
         private configService: ConfigService,
         private tokenService: TokenService,
         private bcryptService: BcryptService,
-        private mailService: MailService
-
+        private mailService: MailService,
+        private refreshTokenService: RefreshTokenService
     ) { }
-
 
 
     async signUp(req: Request, signupData: any) {
@@ -96,7 +101,7 @@ export class AuthService {
         return { id_: _id }
     }
 
-    async login(req: Request, loginData: LoginDto) {
+    async login(loginData: LoginDto) {
         const { email, password } = loginData;
         const user = await this.userModel.findOne({ email: email.toLowerCase() })
         if (!user) {
@@ -112,12 +117,44 @@ export class AuthService {
         }
 
         const access_token = this.tokenService.generateToken({ payload: { id: user._id, role: user.role }, expiresIn: 60 * 30 })
-        const refresh_token = this.tokenService.generateToken({ payload: { id: user._id, role: user.role }, expiresIn: 60 * 60 * 24 * 365 })
+        const refresh_token = uuidv4()
+        await this.refreshTokenService.storeRefreshToken(refresh_token, user._id)
 
         user.status = "Online"
         user.save()
 
-        return { message: "Done",access_token, refresh_token }
+        return { access_token, refresh_token }
+    }
+
+    async refreshTokens(refreshTokenDto: RefreshTokenDto) {
+        console.log(refreshTokenDto);
+
+        const token = await this.refreshTokenModel.findOne({
+            token: refreshTokenDto.refreshtoken,
+            expireDate: { $gte: new Date() }
+        })
+        if (!token) {
+            throw new ConflictException('Refresh token is invalid or has expired')
+        }
+
+        const user = await this.userModel.findById(token.userId)
+        if (!user) {
+            throw new ConflictException('User associated with this token does not exist')
+        }
+
+        const access_token = this.tokenService.generateToken({ payload: { id: user._id, role: user.role }, expiresIn: 60 * 30 })
+        const refresh_token = uuidv4()
+
+        // Update the refresh token in the database
+        token.token = refresh_token;
+        token.expireDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Expiry set to 7 days
+        await token.save();
+
+        // Return the new token
+        return {
+            access_token,
+            refresh_token
+        };
     }
 
 }

@@ -13,7 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import * as Joi from 'joi';
 import { JwtModule } from '@nestjs/jwt';
-import { TokenService } from './auth/jwt/Generate&VerifyToken.service';
+import { TokenService } from './auth/service/generate&VerifyToken.service';
 import { MailModule } from './mail/mail.module';
 
 @Module({
