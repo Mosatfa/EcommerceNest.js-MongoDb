@@ -3,14 +3,9 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class BcryptService {
-    constructor(){
-        console.log(process.env.SALT_ROUND);
-        
-    }
+    constructor() { }
     hash(plaintext: string, saltRound: number = parseInt(process.env.SALT_ROUND)): string {
-        // console.log(plaintext  , saltRound);
-        
-        return bcrypt.hashSync(plaintext, 8);
+        return bcrypt.hashSync(plaintext, saltRound);
     }
 
     compare(plaintext: string, hashValue: string): boolean {

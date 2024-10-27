@@ -7,12 +7,14 @@ import { Model } from 'mongoose';
 import { CreateCouponDto } from './dtos/create-coupon.dto';
 import { UpdateCouponDto } from './dtos/update-coupon.dto';
 import { CustomRequest } from 'src/common/interfaces/custom-request.interface';
+import { ApplyCouponDto } from './dtos/apply-coupon.dto';
+import { Cart } from 'src/cart/schema/cart.schema';
 
 @Injectable()
 export class CouponService implements ICouponService {
     constructor(
         @InjectModel(Coupon.name) private couponModel: Model<Coupon>,
-        private cloudinaryService: CloudinaryService
+        @InjectModel(Cart.name) private cartModel: Model<Cart>,
     ) { }
 
     async getCoupons(): Promise<Coupon[]> {
@@ -20,7 +22,7 @@ export class CouponService implements ICouponService {
         return coupon
     };
 
-    async createCoupon(req: CustomRequest,createCouponDto: CreateCouponDto): Promise<Coupon> {
+    async createCoupon(req: CustomRequest, createCouponDto: CreateCouponDto): Promise<Coupon> {
         const normalizedName = createCouponDto.name.toUpperCase();
         // Check if coupon with the normalized name already exists
         if (await this.couponModel.findOne({ name: normalizedName })) {
@@ -29,7 +31,7 @@ export class CouponService implements ICouponService {
 
         // Convert expireDate from string to Date
         createCouponDto.expireDate = new Date(createCouponDto.expireDate);
-        
+
         const coupon = await this.couponModel.create({
             ...createCouponDto,
             createdBy: req.user._id
@@ -37,7 +39,7 @@ export class CouponService implements ICouponService {
         return coupon
     };
 
-    async updateCoupon(req: CustomRequest,couponId: string, updateCouponDto: UpdateCouponDto): Promise<Coupon> {
+    async updateCoupon(req: CustomRequest, couponId: string, updateCouponDto: UpdateCouponDto): Promise<Coupon> {
         const coupon = await this.couponModel.findById(couponId)
         if (!coupon) {
             throw new NotFoundException(`Coupon with ID ${couponId} not found.`)
@@ -64,4 +66,23 @@ export class CouponService implements ICouponService {
         coupon.save()
         return coupon
     };
+
+    async applyCoupon(session: Record<string, any>,applyCouponDto: ApplyCouponDto): Promise<Cart> {
+        const coupon = await this.couponModel.findOne({ name: applyCouponDto.couponName.toUpperCase() })
+        if (!coupon || coupon.expireDate.getTime() < Date.now()) {
+            throw new NotFoundException(`In-Valid or Expire Coupon`)
+        }
+
+        // Check Cart Exist
+        const cart = await this.cartModel.findOne({ cartId_session: session.cartId })
+        if (!cart) {
+            throw new NotFoundException(`In-Valid cartId`)
+        }
+        cart.couponId = coupon._id
+        cart.finalPrice = cart.subTotal - (cart.subTotal * ((coupon?.amount || 0) / 100)),
+        cart.finalPrice.toFixed(2)
+
+        await cart.save()
+        return cart
+    }
 }

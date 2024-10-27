@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Req, Session, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Coupon } from './schema/coupon.schema';
 import { CreateCouponDto } from './dtos/create-coupon.dto';
 import { UpdateCouponDto } from './dtos/update-coupon.dto';
@@ -10,6 +10,8 @@ import { Role } from 'src/common/enums/role.enum';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { CustomRequest } from 'src/common/interfaces/custom-request.interface';
+import { ApplyCouponDto } from './dtos/apply-coupon.dto';
+import { Cart } from 'src/cart/schema/cart.schema';
 
 
 @Controller('coupon')
@@ -29,11 +31,19 @@ export class CouponController implements ICouponService {
         return await this.couponService.createCoupon(req, createCouponDto)
     };
 
+
     @Put(':couponId')
     @Roles(Role.Admin)
     @UseGuards(AuthGuard, RolesGuard)
     @HttpCode(HttpStatus.OK)
     async updateCoupon(@Req() req: CustomRequest, @Param('couponId', ParseObjectIdPipe) couponId: string, @Body() updateCouponDto: UpdateCouponDto): Promise<Coupon> {
         return await this.couponService.updateCoupon(req, couponId, updateCouponDto)
+    };
+
+
+    @Post('apply')
+    @HttpCode(HttpStatus.OK)
+    async applyCoupon(@Session() session: Record<string, any>, @Body() applyCouponDto: ApplyCouponDto): Promise<Cart> {
+        return await this.couponService.applyCoupon(session,applyCouponDto)
     };
 }

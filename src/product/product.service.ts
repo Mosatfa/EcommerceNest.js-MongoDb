@@ -10,17 +10,52 @@ import { Subcategory } from 'src/subcategory/schema/subcategory.schema';
 import slugify from 'slugify';
 import { v4 as uuidv4 } from 'uuid';
 import { CustomRequest } from 'src/common/interfaces/custom-request.interface';
+import { User } from 'src/user/schema/user.schema';
+import ApiFeatures from 'src/common/utils/ApiFeatures';
+import { Review } from 'src/reviews/schema/review.schema';
+import { IProductService } from './interfaces/product.interface';
 
 
 @Injectable()
-export class ProductService {
+export class ProductService implements IProductService {
     constructor(
         @InjectModel(Product.name) private productModel: Model<Product>,
         @InjectModel(Brand.name) private brandModel: Model<Brand>,
         @InjectModel(Subcategory.name) private subcategoryModel: Model<Subcategory>,
+        @InjectModel(User.name) private userModel: Model<User>,
         private cloudinaryService: CloudinaryService
     ) { }
 
+    async getProducts(query: Record<string, any>): Promise<{ products: Product[] }> {
+        const apiFeature = new ApiFeatures(
+            this.productModel.find().populate([
+                {
+                    path: 'review'
+                }
+            ]), // Populate reviews
+            query
+        )
+            .filter()
+            .sort()
+            .select();
+
+        const products = await apiFeature.mongooseQuery.exec();
+
+        // Calculate average ratings
+        const productsWithRatings = products.map(product => {
+            const calcRating = product.review.reduce((acc: number, review: Review) => acc + review.rating, 0);
+            const avgRating = product.review.length ? calcRating / product.review.length : 0;
+
+            const productObject = product.toObject();
+            productObject.avgRating = avgRating;
+
+            return productObject;
+        });
+
+        return { products: productsWithRatings };
+
+
+    }
 
     async createProduct(req: CustomRequest, createProductDto: CreateProductDto, files: any): Promise<Product> {
         const { name, price, discount, categoryId, subcategoryId, brandId } = createProductDto
@@ -59,7 +94,7 @@ export class ProductService {
             mainImage: { secure_url, public_id },
             subImages,
             createdBy: req.user._id
-        } 
+        }
         const product = await this.productModel.create(productData);
 
         return product
@@ -120,11 +155,48 @@ export class ProductService {
             }
             productData.subImages = subImagies
         }
-     
+
         productData.updatedBy = req.user._id
 
         const newProduct = await this.productModel.findByIdAndUpdate({ _id: product._id }, productData)
 
         return newProduct
     };
+
+
+    async addWishList(req: CustomRequest, productId: string): Promise<{ message: string }> {
+        const product = await this.productModel.findById(productId)
+
+        if (!product) {
+            throw new BadRequestException(`In-Valid product Id`)
+        }
+
+        const updateResult = await this.userModel.updateOne({ _id: req.user._id }, { $addToSet: { wishList: product._id } })
+        // Check if the update was successful
+        if (updateResult.matchedCount === 0) {
+            throw new BadRequestException(`Failed to add product to wishlist. User may not exist.`);
+        }
+
+        return { message: "The product has been added to wishlist." }
+    }
+
+    async removeWishList(req: CustomRequest, productId: string): Promise<{ message: string }> {
+        const product = await this.productModel.findById(productId)
+
+        if (!product) {
+            throw new BadRequestException(`In-Valid product Id`)
+        }
+
+        const updateResult = await this.userModel.updateOne(
+            { _id: req.user._id },
+            { $pull: { wishList: product._id } }
+        );
+
+        // Check if the update was successful
+        if (updateResult.matchedCount === 0) {
+            throw new BadRequestException(`Failed to remove product from wishlist. User may not exist.`);
+        }
+
+        return { message: "The product you wish to have has been removed." }
+    }
 }

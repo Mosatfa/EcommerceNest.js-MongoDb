@@ -22,3 +22,9 @@ export class Category {
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);
+
+CategorySchema.virtual('subcategory', {
+    localField: "_id",
+    foreignField: "categoryId",
+    ref: "Subcategory"
+})

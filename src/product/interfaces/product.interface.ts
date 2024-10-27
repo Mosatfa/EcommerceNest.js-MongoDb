@@ -5,7 +5,7 @@ import { Product } from "../schema/product.schema";
 
 
 export interface IProductService {
-  getProducts(): Promise<Product[]>;
+  getProducts(query:any): Promise<{ products: Product[] }>
   createProduct(req:CustomRequest,createProductDto: CreateProductDto, files: { mainImage: Express.Multer.File, subImages?: Express.Multer.File[] }): Promise<Product>;
   updateProduct(req:CustomRequest,productId: string, updateProductDto?: UpdateProductDto, files?: { mainImage?: Express.Multer.File, subImages?: Express.Multer.File[] }): Promise<Product>;
 }

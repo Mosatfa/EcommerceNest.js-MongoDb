@@ -5,7 +5,7 @@ export type SubcategoryDocument = HydratedDocument<Subcategory>;
 
 @Schema({ timestamps: true })
 export class Subcategory {
-    @Prop({ required: true, unique: true})
+    @Prop({ required: true, unique: true })
     customId: string
 
     @Prop({ required: true, unique: true, lowercase: true })
@@ -18,7 +18,7 @@ export class Subcategory {
     image: Record<string, any>;;
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true })
-    categoryId:mongoose.Schema.Types.ObjectId
+    categoryId: mongoose.Schema.Types.ObjectId
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false })
     createdBy: mongoose.Schema.Types.ObjectId; // required: true type USER
@@ -28,3 +28,4 @@ export class Subcategory {
 }
 
 export const SubcategorySchema = SchemaFactory.createForClass(Subcategory);
+
