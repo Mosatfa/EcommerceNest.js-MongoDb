@@ -1,5 +1,5 @@
 import { CreateSubCategoryDto } from './dtos/create-subcategory.dto';
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Subcategory } from './schema/subcategory.schema';
 import { UpdateSubCategoryDto } from './dtos/update-subcategory.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -42,5 +42,13 @@ export class SubcategoryController implements IsubCategoryService {
         createParseFilePipe('2MB', ['jpeg', 'png', 'jpg'], false)
     ) file: Express.Multer.File): Promise<Subcategory> {
         return await this.subcategoryService.updateSubCategory(req,categoryId, subcategoryId, updateSubCategoryDto, file)
+    }
+
+    @Delete(':subCategoryId')
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard, RolesGuard)
+    @HttpCode(HttpStatus.OK)
+    async deleteSubCategory(@Param('subCategoryId', ParseObjectIdPipe) subCategoryId: string): Promise<{ message: string }> {
+        return await this.subcategoryService.deleteSubCategory(subCategoryId)
     }
 }

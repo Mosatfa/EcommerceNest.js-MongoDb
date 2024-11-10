@@ -20,7 +20,7 @@ export class Subcategory {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true })
     categoryId: mongoose.Schema.Types.ObjectId
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
     createdBy: mongoose.Schema.Types.ObjectId; // required: true type USER
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })

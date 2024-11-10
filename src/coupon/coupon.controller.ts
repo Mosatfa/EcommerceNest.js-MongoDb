@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Req, Session, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Req, Session, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Coupon } from './schema/coupon.schema';
 import { CreateCouponDto } from './dtos/create-coupon.dto';
 import { UpdateCouponDto } from './dtos/update-coupon.dto';
@@ -46,4 +46,12 @@ export class CouponController implements ICouponService {
     async applyCoupon(@Session() session: Record<string, any>, @Body() applyCouponDto: ApplyCouponDto): Promise<Cart> {
         return await this.couponService.applyCoupon(session,applyCouponDto)
     };
+
+    @Delete(':couponId')
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard, RolesGuard)
+    @HttpCode(HttpStatus.OK)
+    async deleteCoupon(@Param('couponId', ParseObjectIdPipe) couponId: string): Promise<{ message: string }> {
+        return await this.couponService.deleteCoupon(couponId)
+    }
 }

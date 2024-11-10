@@ -5,8 +5,9 @@ import { ConfigService } from '@nestjs/config';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { ValidationPipe } from '@nestjs/common';
 import session from 'express-session';
-import connectMongo from 'connect-mongo';
+import connectMongo  from 'connect-mongo';
 import { v4 as uuidv4 } from 'uuid';
+;
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -32,11 +33,13 @@ async function bootstrap() {
         collectionName: 'sessions',
       }),
       cookie: {
-        maxAge: 1000 * 60 * 60,
+        maxAge: 1000 * 60 * 60 * 24,
         httpOnly: true,
       },
     }),
   );
+
+
 
   app.use((req: any, res: any, next: any) => {
     if (!req.session.cartId) {

@@ -10,7 +10,7 @@ export class UserService {
     ) { }
 
     async findById(id: string): Promise<User> {
-        const user = await this.userModel.findById(id).select("userName image role");
+        const user = await this.userModel.findById(id).select("userName image role email");
         if (!user) {
             throw new NotFoundException('User not found');
         }

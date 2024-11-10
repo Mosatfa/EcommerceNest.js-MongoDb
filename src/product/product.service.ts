@@ -53,8 +53,6 @@ export class ProductService implements IProductService {
         });
 
         return { products: productsWithRatings };
-
-
     }
 
     async createProduct(req: CustomRequest, createProductDto: CreateProductDto, files: any): Promise<Product> {
@@ -99,7 +97,6 @@ export class ProductService implements IProductService {
 
         return product
     }
-
 
     async updateProduct(req: CustomRequest, productId: string, UpdateProductDto?: UpdateProductDto, files?: any): Promise<Product> {
         const { name, price, discount, colors, size } = UpdateProductDto;
@@ -163,6 +160,21 @@ export class ProductService implements IProductService {
         return newProduct
     };
 
+    async deleteProduct(productId: string,): Promise<{ message: string }> {
+        const product = await this.productModel.findByIdAndDelete(productId)
+        if (!product) {
+            throw new NotFoundException(`Product with ID ${productId} not found`)
+        }
+        //Delete mainImage 
+        await this.cloudinaryService.destroy(product.mainImage.public_id)
+        //Delete subImages if present
+        if (product.subImages?.length) {
+            for (const image of product.subImages) {
+                await this.cloudinaryService.destroy(image.public_id)
+            }
+        }
+        return { message: 'Deleted Product' }
+    }
 
     async addWishList(req: CustomRequest, productId: string): Promise<{ message: string }> {
         const product = await this.productModel.findById(productId)

@@ -5,7 +5,6 @@ import nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-    private transporter;
     constructor(
         private readonly mailService: MailerService,
         private readonly configService: ConfigService,

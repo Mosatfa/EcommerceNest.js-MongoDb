@@ -4,7 +4,8 @@ import mongoose from 'mongoose';
 export interface CustomRequest extends Request {
     user: {
         _id:  mongoose.Schema.Types.ObjectId;
+        email:string,
         userName: string,
-        role:string
+        role:string,
     };
 }

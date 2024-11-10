@@ -11,6 +11,7 @@ import { Role } from 'src/common/enums/role.enum';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { CustomRequest } from 'src/common/interfaces/custom-request.interface';
+import { ParseObjectIdPipe } from 'src/common/pipes/parse-objectid.pipe';
 
 @Controller('product')
 export class ProductController implements IProductService {
@@ -18,7 +19,7 @@ export class ProductController implements IProductService {
 
     @Get()
     @HttpCode(HttpStatus.CREATED)
-    async getProducts(@Query() query:any): Promise<{ products: Product[] }> {
+    async getProducts(@Query() query: any): Promise<{ products: Product[] }> {
         return await this.productService.getProducts(query)
     };
 
@@ -43,16 +44,24 @@ export class ProductController implements IProductService {
         { name: 'mainImage', maxCount: 1 },
         { name: 'subImages', maxCount: 5 },
     ]))
-    async updateProduct(@Req() req: CustomRequest, @Param('productId') productId: string, @Body() updateProductDto: UpdateProductDto, @UploadedFiles() files: { mainImage?: Express.Multer.File, subImages?: Express.Multer.File[] }
+    async updateProduct(@Req() req: CustomRequest, @Param('productId', ParseObjectIdPipe) productId: string, @Body() updateProductDto: UpdateProductDto, @UploadedFiles() files: { mainImage?: Express.Multer.File, subImages?: Express.Multer.File[] }
     ): Promise<Product> {
         return await this.productService.updateProduct(req, productId, updateProductDto, files)
     };
+
+    @Delete(':productId')
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard, RolesGuard)
+    @HttpCode(HttpStatus.OK)
+    async deleteProduct(@Param('productId', ParseObjectIdPipe) productId: string): Promise<{ message: string }> {
+        return await this.productService.deleteProduct(productId);
+    }
 
     @Patch(':productId')
     @Roles(Role.User)
     @UseGuards(AuthGuard, RolesGuard)
     @HttpCode(HttpStatus.OK)
-    async addWishList(@Req() req: CustomRequest, @Param('productId') productId: string): Promise<{ message: string }> {
+    async addWishList(@Req() req: CustomRequest, @Param('productId', ParseObjectIdPipe) productId: string): Promise<{ message: string }> {
         return await this.productService.addWishList(req, productId)
     };
 
@@ -60,10 +69,9 @@ export class ProductController implements IProductService {
     @Roles(Role.User)
     @UseGuards(AuthGuard, RolesGuard)
     @HttpCode(HttpStatus.OK)
-    async removeWishList(@Req() req: CustomRequest, @Param('productId') productId: string) {
+    async removeWishList(@Req() req: CustomRequest, @Param('productId', ParseObjectIdPipe) productId: string): Promise<{ message: string }> {
         return await this.productService.removeWishList(req, productId);
     }
-
 
 }
 

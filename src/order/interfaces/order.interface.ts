@@ -6,7 +6,7 @@ import { UpdateOrderStautsDto } from "../dtos/update-order.dto";
 
 
 export interface IOrderService {
-    createOrder(session: Record<string, any>, req: CustomRequest, createOrderDto: CreateOrderDto): Promise<Order>
+    createOrder(session: Record<string, any>, req: CustomRequest, createOrderDto: CreateOrderDto): Promise<Order | string>
     cancelOrder(orderId: string, req: CustomRequest, cancleOrderDto: CancleOrderDto): Promise<Record<string, any>>
     updateOrderStatusByAdmin(orderId: string, req: CustomRequest, updateOrderStautsDto: UpdateOrderStautsDto): Promise<Record<string, any>>
 }

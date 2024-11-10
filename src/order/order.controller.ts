@@ -23,7 +23,7 @@ export class OrderController implements IOrderService {
     @Roles(Role.User)
     @UseGuards(AuthGuard, RolesGuard)
     @HttpCode(HttpStatus.CREATED)
-    async createOrder(@Session() session: Record<string, any>, @Req() req: CustomRequest, @Body() createOrderDto: CreateOrderDto): Promise<Order> {
+    async createOrder(@Session() session: Record<string, any>, @Req() req: CustomRequest, @Body() createOrderDto: CreateOrderDto): Promise<Order | string>{
         return await this.orderService.createOrder(session, req, createOrderDto)
     }
 

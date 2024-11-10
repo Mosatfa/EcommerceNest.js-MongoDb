@@ -64,4 +64,13 @@ export class BrandService implements IBrandService {
         brand.save()
         return brand
     }
+
+    async deleteBrand(brandId: string): Promise<{ message: string }> {
+        const brand = await this.brandModel.findByIdAndDelete(brandId);
+        await this.cloudinaryService.destroy(brand.logo.public_id)
+        if (!brand) {
+            throw new NotFoundException(`Brand with ID ${brandId} not found`)
+        }
+        return { message: 'Deleted Brand' }
+    }
 }

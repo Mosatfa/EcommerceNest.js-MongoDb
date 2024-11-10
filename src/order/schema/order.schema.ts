@@ -21,6 +21,7 @@ export class Order {
     note: string
 
     @Prop([{
+        name: { type: String, required: true },
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
         quantity: { type: Number, default: 1, required: true },
         unitPrice: { type: Number, default: 1, required: true },
@@ -47,7 +48,7 @@ export class Order {
     reason: String
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false })
-    updatedBy: mongoose.Schema.Types.ObjectId 
+    updatedBy: mongoose.Schema.Types.ObjectId
 
 
 }

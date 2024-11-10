@@ -10,6 +10,8 @@ import { CreateOrderDto } from './dtos/create-order.dto';
 import { CancleOrderDto } from './dtos/cancle-order.dto';
 import { UpdateOrderStautsDto } from './dtos/update-order.dto';
 import { IOrderService } from './interfaces/order.interface';
+import { StripeService } from 'src/stripe/stripe.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OrderService implements IOrderService {
@@ -18,9 +20,11 @@ export class OrderService implements IOrderService {
         @InjectModel(Cart.name) private cartModel: Model<Cart>,
         @InjectModel(Product.name) private productModel: Model<Product>,
         @InjectModel(Coupon.name) private couponModel: Model<Coupon>,
+        private configService: ConfigService,
+        private paymentService: StripeService
     ) { }
 
-    async createOrder(session: Record<string, any>, req: CustomRequest, createOrderDto: CreateOrderDto): Promise<Order> {
+    async createOrder(session: Record<string, any>, req: CustomRequest, createOrderDto: CreateOrderDto): Promise<Order | string> {
         const { address, phone, note, paymentType } = createOrderDto;
 
         const cart = await this.cartModel.findOne({ cartId_session: session.cartId })
@@ -28,11 +32,7 @@ export class OrderService implements IOrderService {
             throw new BadRequestException('Empty cart');
         }
 
-
         req.body.products = cart.products
-
-        // console.log(req.body.products);
-
 
         const productIds = []
         const finalProductList = []
@@ -49,6 +49,7 @@ export class OrderService implements IOrderService {
                 throw new BadRequestException('Invalid product or insufficient stock');
             }
             // Prepare the product object for order
+
             const productData = {
                 productId,
                 name: checkProduct.name,
@@ -81,7 +82,27 @@ export class OrderService implements IOrderService {
 
         // push userId in usedbY COUPON
         if (cart?.couponId) {
-            await this.couponModel.updateOne({ _id: cart.couponId }, { $addToSet: { usedBy: req.user._id } })
+            const coupon = await this.couponModel.findByIdAndUpdate({ _id: cart.couponId }, { $addToSet: { usedBy: req.user._id } }, { new: true })
+            req.body.coupon = coupon
+        }
+
+        //payment
+        if (order.paymentType == 'card') {
+            if (req.body.coupon) {
+                const couponId = this.paymentService.createCoupon(req.body.coupon)
+                req.body.couponId = couponId
+            }
+            const sessionPayment = await this.paymentService.createPaymentSession({
+                customer_email: req.user.email,
+                metadata: {
+                    orderId: order._id.toString()
+                },
+                success_url: `${this.configService.get<string>('SUCCESS_URL')}`,
+                cancel_url: `${this.configService.get<string>('CANCEL_URL')}?orderId=${order._id.toString()}`,
+                line_items: order.products,
+                discounts: req.body.coupon ? [{ coupon: req.body.couponId }] : []
+            })
+            return sessionPayment.url
         }
 
         // clear item cart
@@ -137,7 +158,7 @@ export class OrderService implements IOrderService {
         return { message: "Order canceled successfully" };
     }
 
-    async updateOrderStatusByAdmin(orderId: string, req: CustomRequest, updateOrderStautsDto: UpdateOrderStautsDto): Promise<Record<string, any>>  {
+    async updateOrderStatusByAdmin(orderId: string, req: CustomRequest, updateOrderStautsDto: UpdateOrderStautsDto): Promise<Record<string, any>> {
         const { status } = updateOrderStautsDto;
 
         const order = await this.orderModel.findOne({ _id: orderId, userId: req.user._id })

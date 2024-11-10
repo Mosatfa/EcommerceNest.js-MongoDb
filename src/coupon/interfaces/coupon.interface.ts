@@ -8,7 +8,8 @@ import { Cart } from "src/cart/schema/cart.schema";
 
 export interface ICouponService {
     getCoupons(): Promise<Coupon[]>;
-    createCoupon(req:CustomRequest,createCouponDto: CreateCouponDto): Promise<Coupon>;
-    updateCoupon(req:CustomRequest,couponId: string, updateCouponDto: UpdateCouponDto): Promise<Coupon>;
+    createCoupon(req: CustomRequest, createCouponDto: CreateCouponDto): Promise<Coupon>;
+    updateCoupon(req: CustomRequest, couponId: string, updateCouponDto: UpdateCouponDto): Promise<Coupon>;
     applyCoupon(session: Record<string, any>, applyCouponDto: ApplyCouponDto): Promise<Cart>
+    deleteCoupon(couponId: string): Promise<{ message: string }>
 }

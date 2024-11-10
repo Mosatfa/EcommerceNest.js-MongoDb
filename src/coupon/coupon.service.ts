@@ -85,4 +85,13 @@ export class CouponService implements ICouponService {
         await cart.save()
         return cart
     }
+
+    async deleteCoupon(couponId: string): Promise<{ message: string }> {
+        const coupon = await this.couponModel.findByIdAndDelete(couponId);
+
+        if (!coupon) {
+            throw new NotFoundException(`Coupon with ID ${couponId} not found`)
+        }
+        return { message: 'Deleted Coupon' }
+    }
 }

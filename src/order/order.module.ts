@@ -9,6 +9,7 @@ import { Cart, CartSchema } from 'src/cart/schema/cart.schema';
 import { Product, ProductSchema } from 'src/product/schema/product.schema';
 import { Coupon, CouponSchema } from 'src/coupon/schema/coupon.schema';
 import { User, UserSchema } from 'src/user/schema/user.schema';
+import { StripeService } from 'src/stripe/stripe.service';
 
 @Module({
   imports: [
@@ -21,6 +22,6 @@ import { User, UserSchema } from 'src/user/schema/user.schema';
     ])
   ],
   controllers: [OrderController],
-  providers: [OrderService, JwtService, UserService]
+  providers: [OrderService, JwtService, UserService ,StripeService]
 })
 export class OrderModule { }

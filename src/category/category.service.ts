@@ -59,8 +59,6 @@ export class CategoryService {
         }
 
         if (file) {
-            console.log('Update file');
-
             const { secure_url, public_id } = await this.cloudinaryService.uploadFile(file, 'category')
             await this.cloudinaryService.destroy(category.image.public_id)
             category.image = { secure_url, public_id }
@@ -69,5 +67,14 @@ export class CategoryService {
         category.updatedBy = req.user._id
         await category.save()
         return category
+    }
+
+    async deleteCategory(categoryId: string): Promise<{ message: string }> {
+        const category = await this.categoryModel.findByIdAndDelete(categoryId);
+        await this.cloudinaryService.destroy(category.image.public_id)
+        if (!category) {
+            throw new NotFoundException(`Category with ID ${categoryId} not found`)
+        }
+        return { message: 'Deleted Category' }
     }
 }

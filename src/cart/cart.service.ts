@@ -7,9 +7,10 @@ import mongoose, { Model, Schema, Types } from 'mongoose';
 import { Product } from 'src/product/schema/product.schema';
 import { CustomRequest } from 'src/common/interfaces/custom-request.interface';
 import { UpdateCartDto } from './dtos/update-cart.dto';
+import { ICartService } from './interfaces/cart.interface';
 
 @Injectable()
-export class CartService {
+export class CartService implements ICartService {
     constructor(
         @InjectModel(Cart.name) private cartModel: Model<Cart>,
         @InjectModel(Product.name) private productModel: Model<Product>,
@@ -29,7 +30,6 @@ export class CartService {
         }
 
         if (product.stock < quantity || product.isDeleted) {
-            await this.productModel.updateOne({ _id: productId })
             throw new BadRequestException(`In-Valid Product quantity max available is ${product.stock}`)
         }
 
@@ -73,12 +73,9 @@ export class CartService {
             cart.products.push({ productId, quantity });
             cart.subTotal += subTotal
             cart.finalPrice += subTotal
-
         }
 
-
         await cart.save()
-
         return cart
     }
 

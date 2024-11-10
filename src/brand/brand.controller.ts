@@ -1,5 +1,5 @@
 import { BrandService } from './brand.service';
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { IBrandService } from './interfaces/brand.interface';
 import { Brand } from './schema/brand.schema';
 import { CreateBrandDto } from './dtos/create-brand.dto';
@@ -43,4 +43,12 @@ export class BrandController implements IBrandService {
     ) file?: Express.Multer.File): Promise<Brand> {
         return await this.brandService.updateBrand(req,brandId, updateBrandDto, file)
     };
+
+    @Delete(':brandId')
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard, RolesGuard)
+    @HttpCode(HttpStatus.OK)
+    async deleteBrand(@Param('brandId', ParseObjectIdPipe) brandId: string): Promise<{ message: string }> {
+        return await this.brandService.deleteBrand(brandId)
+    }
 }

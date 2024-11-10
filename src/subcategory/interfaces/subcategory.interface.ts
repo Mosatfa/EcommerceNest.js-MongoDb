@@ -6,6 +6,7 @@ import { Subcategory } from "../schema/subcategory.schema";
 
 export interface IsubCategoryService {
     getSubcategory(categoryId: string): Promise<Subcategory[]>;
-    createSubCategory(req:CustomRequest,categoryId: string, createSubCategoryDto: CreateSubCategoryDto, file: Express.Multer.File): Promise<Subcategory>;
-    updateSubCategory(req:CustomRequest,categoryId: string, subcategoryId:string, updateSubCategoryDto: UpdateSubCategoryDto, file: Express.Multer.File): Promise<Subcategory>;
+    createSubCategory(req: CustomRequest, categoryId: string, createSubCategoryDto: CreateSubCategoryDto, file: Express.Multer.File): Promise<Subcategory>;
+    updateSubCategory(req: CustomRequest, categoryId: string, subcategoryId: string, updateSubCategoryDto: UpdateSubCategoryDto, file: Express.Multer.File): Promise<Subcategory>;
+    deleteSubCategory(subCategoryId: string): Promise<{ message: string }>
 }

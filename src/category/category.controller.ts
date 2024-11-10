@@ -1,5 +1,5 @@
 import { CategoryService } from './category.service';
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { Category } from './schema/category.schema';
 import { CreateCategoryDto } from './dtos/create-category.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -43,6 +43,14 @@ export class CategoryController implements ICategoryService {
     async updateCategory(@Req() req: CustomRequest, @Param('categoryId', ParseObjectIdPipe) categoryId: string, @Body() updateCategoryDto: UpdateCategoryDto, @UploadedFile(
         createParseFilePipe('2MB', ['jpeg', 'png', 'jpg'], false)
     ) file: Express.Multer.File): Promise<Category> {
-        return await this.categoryService.updateCategory(req,categoryId, updateCategoryDto, file)
+        return await this.categoryService.updateCategory(req, categoryId, updateCategoryDto, file)
+    }
+
+    @Delete(':categoryId')
+    @Roles(Role.Admin)
+    @UseGuards(AuthGuard, RolesGuard)
+    @HttpCode(HttpStatus.OK)
+    async deleteCategory(@Param('categoryId', ParseObjectIdPipe) categoryId: string): Promise<{ message: string }> {
+        return await this.categoryService.deleteCategory(categoryId)
     }
 }

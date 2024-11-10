@@ -84,4 +84,13 @@ export class SubcategoryService implements IsubCategoryService {
 
         return existSubCategory
     }
+
+    async deleteSubCategory(subCategoryId: string): Promise<{ message: string }> {
+        const subCategory = await this.subcategoryModel.findByIdAndDelete(subCategoryId);
+        await this.cloudinaryService.destroy(subCategory.image.public_id)
+        if (!subCategory) {
+            throw new NotFoundException(`SubCategory with ID ${subCategoryId} not found`)
+        }
+        return { message: 'Deleted SubCategory' }
+    }
 }

@@ -18,6 +18,7 @@ import { MailModule } from './mail/mail.module';
 import { CartModule } from './cart/cart.module';
 import { OrderModule } from './order/order.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -41,7 +42,8 @@ import { ReviewsModule } from './reviews/reviews.module';
     MailModule,
     CartModule,
     OrderModule,
-    ReviewsModule
+    ReviewsModule,
+    StripeModule
   ],
   controllers: [AppController],
   providers: [AppService, TokenService],
