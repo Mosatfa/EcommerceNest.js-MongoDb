@@ -73,53 +73,6 @@ export class StripeService {
         return createCoupon.id
     }
 
-    async checkOut(req: CustomRequest, res: any, orderId: string): Promise<any> {
-        const order = await this.orderModel.findOne({ _id: orderId, userId: req.user._id });
-
-        if (!order || order.status !== 'waitPayment') {
-            throw new NotFoundException('Order is invalid or does not exist');
-        }
-
-
-        if (order.paymentType !== 'card') {
-            throw new BadRequestException('Invalid payment method');
-        }
-
-        // return this.stripe.paymentIntents.create({
-        //     amount: order.finalPrice * 100,
-        //     currency: "usd", // Set currency to USD
-        //     payment_method_types: ['card'],
-        // });
-
-        const session = await this.stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            line_items: [{
-                price_data: {
-                    currency: 'usd',
-                    product_data: {
-                        name: 'Order Payment',
-                    },
-                    unit_amount: order.finalPrice * 100,
-                },
-                quantity: 1,
-            }],
-            mode: 'payment',
-            success_url: `${this.configService.get<string>('BASE_URL')}stripe/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${this.configService.get<string>('BASE_URL')}stripe/cancel`,
-        });
-
-        return res.redirect(session.url)
-    }
-
-    async successPayment(session_id: string): Promise<{ message: string }> {
-        const session = await this.stripe.checkout.sessions.retrieve(session_id)
-        return { message: "Payment successfully" }
-    }
-
-    cancelPayment(res: any): void {
-        return res.redirect('/api/v1') // link frontend
-    }
-
     async constructEvent(payload: Buffer, signature: string) {
         return this.stripe.webhooks.constructEvent(payload, signature, this.configService.get<string>('WEBHOOK_SECRET'));
     }
@@ -129,8 +82,55 @@ export class StripeService {
         const order = await this.orderModel.findById(orderId);
 
         if (order) {
-            order.status = 'completed'; // Update the status
+            order.status = 'placed'; // Update the status
             await order.save(); // Save the changes to the database
         }
     }
+
+    async handlePaymentRejected(paymentIntent: any) {
+        const orderId = paymentIntent.metadata.orderId; // Ensure you add orderId as metadata when creating PaymentIntent
+        const order = await this.orderModel.findById(orderId);
+        if (order) {
+            order.status = 'rejected'; // Update the status
+            await order.save(); // Save the changes to the database
+        }
+    }
+
+    // async checkOut(req: CustomRequest, res: any, orderId: string): Promise<any> {
+    //     const order = await this.orderModel.findOne({ _id: orderId, userId: req.user._id });
+
+    //     if (!order || order.status !== 'waitPayment') {
+    //         throw new NotFoundException('Order is invalid or does not exist');
+    //     }
+
+
+    //     if (order.paymentType !== 'card') {
+    //         throw new BadRequestException('Invalid payment method');
+    //     }
+
+    //     // return this.stripe.paymentIntents.create({
+    //     //     amount: order.finalPrice * 100,
+    //     //     currency: "usd", // Set currency to USD
+    //     //     payment_method_types: ['card'],
+    //     // });
+
+    //     const session = await this.stripe.checkout.sessions.create({
+    //         payment_method_types: ['card'],
+    //         line_items: [{
+    //             price_data: {
+    //                 currency: 'usd',
+    //                 product_data: {
+    //                     name: 'Order Payment',
+    //                 },
+    //                 unit_amount: order.finalPrice * 100,
+    //             },
+    //             quantity: 1,
+    //         }],
+    //         mode: 'payment',
+    //         success_url: `${this.configService.get<string>('BASE_URL')}stripe/success?session_id={CHECKOUT_SESSION_ID}`,
+    //         cancel_url: `${this.configService.get<string>('BASE_URL')}stripe/cancel`,
+    //     });
+
+    //     return res.redirect(session.url)
+    // }
 }

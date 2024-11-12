@@ -7,13 +7,16 @@ import { ValidationPipe } from '@nestjs/common';
 import session from 'express-session';
 import connectMongo  from 'connect-mongo';
 import { v4 as uuidv4 } from 'uuid';
-;
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService: ConfigService = app.get(ConfigService);
   const port = configService.get<number>('PORT')
   app.setGlobalPrefix('api/v1');
+
+  app.use('/api/v1/webhook', express.raw({ type: 'application/json' }));
+
   app.useGlobalPipes(new ValidationPipe({
     transform: true, // Enables automatic transformation
     whitelist: true,  // Strips properties that are not in the DT

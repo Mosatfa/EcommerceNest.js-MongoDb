@@ -175,4 +175,19 @@ export class OrderService implements IOrderService {
 
         return { message: "Order status updated successfully" };
     }
+
+    async cancelOrderPayment(session: Record<string, any>, orderId: string, req: CustomRequest): Promise<Cart> {
+        const order = await this.orderModel.findOne({ _id: orderId, userId: req.user._id })
+        if (!order) {
+            throw new NotFoundException(`Invalid Order ID`);
+        }
+
+        const cart = await this.cartModel.findByIdAndUpdate(
+            { cartId_session: session.cartId },
+            { $set: { products: order.products } },
+            { new: true }
+        );
+
+        return cart
+    }
 }
